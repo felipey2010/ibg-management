@@ -1,7 +1,15 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { getSession } from "@/features/auth/services/auth-server.service";
+import { redirect } from "next/navigation";
 
-export default function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const session = await getSession();
+
+  if (!session || session.user.status !== "ACTIVE") {
+    redirect("/login?error=session");
+  }
+
   return (
     <div className="bg-background min-h-dvh">
       <AppSidebar />

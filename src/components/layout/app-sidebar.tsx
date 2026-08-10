@@ -1,7 +1,6 @@
-import { Settings } from "lucide-react";
-
 import { Brand } from "@/components/layout/brand";
 import { SidebarNavigation } from "@/components/layout/sidebar-navigation";
+import { LogoutButton } from "@/features/auth/components/logout-button";
 
 export function AppSidebar() {
   return (
@@ -20,13 +19,7 @@ export function AppSidebar() {
           <span className="block truncate text-xs font-semibold">Philip Akpanyi</span>
           <span className="text-muted-foreground block truncate text-[0.68rem]">Administrador</span>
         </span>
-        <button
-          type="button"
-          aria-label="Configurações do perfil"
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <Settings aria-hidden="true" className="size-4" />
-        </button>
+        <LogoutButton />
       </div>
     </aside>
   );
