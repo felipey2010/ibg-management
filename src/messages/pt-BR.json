@@ -1,0 +1,19 @@
+{
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "loading": "Carregando…",
+    "tryAgain": "Tentar novamente"
+  },
+  "navigation": {
+    "dashboard": "Painel",
+    "members": "Membros",
+    "ministries": "Ministérios",
+    "announcements": "Avisos",
+    "events": "Eventos",
+    "inventory": "Estoque",
+    "contributions": "Contribuições",
+    "bibleStudies": "Estudos Bíblicos",
+    "documents": "Documentos"
+  }
+}
