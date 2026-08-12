@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { parseAuthResponse, requestAuthApi } from "@/features/auth/services/auth-server.service";
-import { sessionCookieName, sessionCookieOptions } from "@/lib/auth/auth-cookie";
+import { requestAuthApi } from "@/features/auth/services/auth-server.service";
+import type { AuthApiResponse } from "@/features/auth/types/auth.types";
 
 interface ForwardOptions {
   endpoint: string;
-  setSession?: boolean;
-  clearSession?: boolean;
-  includeSession?: boolean;
 }
 
 function getSafeMessage(status: number): string {
@@ -27,47 +24,29 @@ export async function forwardAuthRequest(request: Request, options: ForwardOptio
     }
 
     const body = request.method === "GET" ? undefined : await request.text();
-    const cookieHeader = request.headers.get("cookie") ?? "";
-    const token = options.includeSession
-      ? cookieHeader.match(new RegExp(`(?:^|;\\s*)${sessionCookieName}=([^;]+)`))?.[1]
-      : undefined;
-    const upstream = await requestAuthApi(
-      options.endpoint,
-      { method: request.method, body: body || undefined },
-      token ? decodeURIComponent(token) : undefined,
-    );
-    const data = await parseAuthResponse(upstream);
-    const response = NextResponse.json(
-      upstream.ok
+    const result = await requestAuthApi<AuthApiResponse>(options.endpoint, {
+      method: request.method,
+      body: body || undefined,
+    });
+    const data = result.response.data;
+
+    return NextResponse.json(
+      result.ok
         ? {
-            message: data.message,
-            user: data.user,
-            status: data.status,
-            valid: data.valid,
-            reason: data.reason,
+            success: true,
+            message: result.response.message,
+            data,
           }
-        : { message: getSafeMessage(upstream.status), valid: data.valid, reason: data.reason },
-      { status: upstream.status },
+        : {
+            success: false,
+            message: getSafeMessage(result.status),
+            data: data ? { valid: data.valid, reason: data.reason } : null,
+          },
+      { status: result.status },
     );
-
-    if (options.setSession && upstream.ok) {
-      const sessionToken = data.accessToken ?? data.token;
-
-      if (!sessionToken) {
-        return NextResponse.json({ message: "A API não retornou uma sessão válida." }, { status: 502 });
-      }
-
-      response.cookies.set(sessionCookieName, sessionToken, sessionCookieOptions);
-    }
-
-    if (options.clearSession) {
-      response.cookies.set(sessionCookieName, "", { ...sessionCookieOptions, maxAge: 0 });
-    }
-
-    return response;
   } catch {
     return NextResponse.json(
-      { message: "Não foi possível conectar ao serviço de autenticação." },
+      { success: false, message: "Não foi possível conectar ao serviço de autenticação.", data: null },
       { status: 503 },
     );
   }

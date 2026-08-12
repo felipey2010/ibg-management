@@ -1,11 +1,17 @@
 import { NextRequest } from "next/server";
-import { describe, expect, it } from "vitest";
+import { getToken } from "next-auth/jwt";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { proxy } from "@/proxy";
 
+vi.mock("next-auth/jwt", () => ({ getToken: vi.fn() }));
+
 describe("proteção otimista do dashboard", () => {
-  it("redireciona visitantes sem cookie para o login", () => {
-    const response = proxy(new NextRequest("http://localhost/dashboard?tab=hoje"));
+  beforeEach(() => vi.mocked(getToken).mockReset());
+
+  it("redireciona visitantes sem sessão para o login", async () => {
+    vi.mocked(getToken).mockResolvedValueOnce(null);
+    const response = await proxy(new NextRequest("http://localhost/dashboard?tab=hoje"));
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
@@ -13,11 +19,21 @@ describe("proteção otimista do dashboard", () => {
     );
   });
 
-  it("permite continuar quando há cookie de sessão", () => {
-    const response = proxy(
-      new NextRequest("http://localhost/dashboard", { headers: { cookie: "ibg_session=token" } }),
-    );
+  it("permite continuar com uma sessão ativa", async () => {
+    vi.mocked(getToken).mockResolvedValueOnce({
+      status: "ACTIVE",
+      userId: "user-1",
+      permissions: [],
+    });
+    const response = await proxy(new NextRequest("http://localhost/dashboard"));
 
     expect(response.headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("trata falhas na leitura da sessão como acesso não autenticado", async () => {
+    vi.mocked(getToken).mockRejectedValueOnce(new Error("invalid token"));
+    const response = await proxy(new NextRequest("http://localhost/dashboard"));
+
+    expect(response.status).toBe(307);
   });
 });

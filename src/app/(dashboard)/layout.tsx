@@ -1,6 +1,6 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { getSession } from "@/features/auth/services/auth-server.service";
+import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {

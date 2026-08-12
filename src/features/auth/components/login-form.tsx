@@ -21,6 +21,10 @@ const oauthErrors: Record<string, string> = {
   provider: "O provedor de autenticação informado não é suportado.",
   service: "O serviço de autenticação está temporariamente indisponível.",
   session: "Sua sessão expirou ou sua conta ainda não está autorizada a acessar a plataforma.",
+  AccessDenied: "Esta conta não está autorizada a acessar a plataforma.",
+  OAuthSignin: "Não foi possível iniciar a autenticação social.",
+  OAuthCallback: "Não foi possível validar o retorno do provedor de autenticação.",
+  Configuration: "O provedor de autenticação ainda não foi configurado corretamente.",
 };
 
 export function LoginForm({
@@ -38,14 +42,17 @@ export function LoginForm({
   async function onSubmit(input: LoginInput) {
     setMessage(undefined);
     try {
-      await login(input);
+      const result = await login(input);
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
       const destination =
         redirectTo?.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/dashboard";
       router.replace(destination);
       router.refresh();
-    } catch (error) {
-      void error;
-      setMessage("Não foi possível entrar. Verifique suas credenciais e tente novamente.");
+    } catch {
+      setMessage("Não foi possível conectar ao serviço de autenticação.");
     }
   }
 

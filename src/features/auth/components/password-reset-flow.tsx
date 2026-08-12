@@ -12,11 +12,7 @@ import { FormField } from "@/features/auth/components/form-field";
 import { FormMessage } from "@/features/auth/components/form-message";
 import { PasswordField } from "@/features/auth/components/password-field";
 import { passwordResetSchema, type PasswordResetInput } from "@/features/auth/schemas/registration.schema";
-import {
-  getAuthErrorMessage,
-  resetPassword,
-  validateResetToken,
-} from "@/features/auth/services/auth-client.service";
+import { resetPassword, validateResetToken } from "@/features/auth/services/auth-client.service";
 
 type ResetState = "validating" | "valid" | "invalid" | "expired" | "error" | "success";
 
@@ -38,7 +34,13 @@ export function PasswordResetFlow({ token }: Readonly<{ token?: string }>) {
     validateResetToken(token)
       .then((result) => {
         if (!active) return;
-        setState(result.valid ? "valid" : result.reason === "EXPIRED" ? "expired" : "invalid");
+        setState(
+          result.success && result.data?.valid
+            ? "valid"
+            : result.data?.reason === "EXPIRED"
+              ? "expired"
+              : "invalid",
+        );
       })
       .catch(() => active && setState("error"));
     return () => {
@@ -50,10 +52,14 @@ export function PasswordResetFlow({ token }: Readonly<{ token?: string }>) {
     if (!token) return;
     setMessage(undefined);
     try {
-      await resetPassword({ token, password: input.password });
+      const result = await resetPassword({ token, password: input.password });
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
       setState("success");
-    } catch (error) {
-      setMessage(getAuthErrorMessage(error, "Não foi possível redefinir sua senha. Solicite um novo link."));
+    } catch {
+      setMessage("Não foi possível redefinir sua senha. Solicite um novo link.");
     }
   }
 

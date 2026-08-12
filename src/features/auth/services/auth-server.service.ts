@@ -1,69 +1,58 @@
 import "server-only";
 
-import { cookies } from "next/headers";
+import type { ApiEnvelope, ApiRequestResult } from "@/features/auth/types/auth.types";
 
-import { authEndpoints } from "@/features/auth/services/auth-endpoints";
-import type { AuthApiResponse, AuthSession } from "@/features/auth/types/auth.types";
-import { sessionCookieName } from "@/lib/auth/auth-cookie";
-
-function getApiUrl(): string {
+function getApiUrl(): string | null {
   const apiUrl = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL;
-
-  if (!apiUrl) {
-    throw new Error("A URL da API de autenticação não foi configurada.");
-  }
-
-  return apiUrl.replace(/\/$/, "");
+  return apiUrl ? apiUrl.replace(/\/$/, "") : null;
 }
 
-export function buildApiUrl(path: string): string {
-  return `${getApiUrl()}${path}`;
+function errorEnvelope<T>(message: string): ApiEnvelope<T> {
+  return { success: false, message, data: null };
 }
 
-export async function requestAuthApi(
+function isApiEnvelope<T>(value: unknown): value is ApiEnvelope<T> {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.success === "boolean" && typeof candidate.message === "string" && "data" in candidate
+  );
+}
+
+export async function requestAuthApi<T>(
   path: string,
   init: RequestInit = {},
   token?: string,
-): Promise<Response> {
-  const headers = new Headers(init.headers);
-  headers.set("Accept", "application/json");
-
-  if (init.body) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
-  return fetch(buildApiUrl(path), {
-    ...init,
-    headers,
-    cache: "no-store",
-  });
-}
-
-export async function parseAuthResponse(response: Response): Promise<AuthApiResponse> {
-  return (await response.json().catch(() => ({}))) as AuthApiResponse;
-}
-
-export async function getSession(): Promise<AuthSession | null> {
-  const token = (await cookies()).get(sessionCookieName)?.value;
-
-  if (!token) {
-    return null;
-  }
-
+): Promise<ApiRequestResult<T>> {
   try {
-    const response = await requestAuthApi(authEndpoints.session, { method: "GET" }, token);
-
-    if (!response.ok) {
-      return null;
+    const apiUrl = getApiUrl();
+    if (!apiUrl) {
+      return { ok: false, status: 500, response: errorEnvelope("Serviço não configurado.") };
     }
 
-    const data = await parseAuthResponse(response);
-    return data.user ? { user: data.user } : null;
+    const headers = new Headers(init.headers);
+    headers.set("Accept", "application/json");
+
+    if (init.body) headers.set("Content-Type", "application/json");
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+
+    const upstream = await fetch(`${apiUrl}${path}`, { ...init, headers, cache: "no-store" });
+    const body: unknown = await upstream.json().catch(() => null);
+
+    if (!isApiEnvelope<T>(body)) {
+      return { ok: false, status: 502, response: errorEnvelope("Resposta inválida do serviço.") };
+    }
+
+    return {
+      ok: upstream.ok && body.success,
+      status: upstream.status,
+      response: body,
+    };
   } catch {
-    return null;
+    return {
+      ok: false,
+      status: 503,
+      response: errorEnvelope("Não foi possível conectar ao serviço de autenticação."),
+    };
   }
 }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { AuthShell } from "@/features/auth/components/auth-shell";
 import { LoginForm } from "@/features/auth/components/login-form";
-import { getSession } from "@/features/auth/services/auth-server.service";
+import { getSession } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = { title: "Entrar" };

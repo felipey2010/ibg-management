@@ -6,8 +6,6 @@ export const authEndpoints = {
   forgotPassword: "/auth/forgot-password",
   validateResetToken: "/auth/password-reset/validate",
   resetPassword: "/auth/password-reset",
-  session: "/auth/session",
   logout: "/auth/logout",
   oauth: (provider: string) => `/auth/oauth/${provider}`,
-  oauthCallback: (provider: string) => `/auth/oauth/${provider}/callback`,
 } as const;

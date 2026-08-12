@@ -12,11 +12,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { AuthCard } from "@/features/auth/components/auth-card";
 import { FormMessage } from "@/features/auth/components/form-message";
 import { verificationSchema, type VerificationInput } from "@/features/auth/schemas/verification.schema";
-import {
-  getAuthErrorMessage,
-  resendVerificationCode,
-  verifyEmail,
-} from "@/features/auth/services/auth-client.service";
+import { resendVerificationCode, verifyEmail } from "@/features/auth/services/auth-client.service";
 
 export function VerificationCodeForm({ email }: Readonly<{ email: string }>) {
   const [isVerified, setIsVerified] = useState(false);
@@ -42,10 +38,14 @@ export function VerificationCodeForm({ email }: Readonly<{ email: string }>) {
   async function onSubmit(input: VerificationInput) {
     setMessage(undefined);
     try {
-      await verifyEmail({ email, code: input.code });
+      const result = await verifyEmail({ email, code: input.code });
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
       setIsVerified(true);
-    } catch (error) {
-      setMessage(getAuthErrorMessage(error, "O código informado é inválido ou expirou."));
+    } catch {
+      setMessage("O código informado é inválido ou expirou.");
     }
   }
 
@@ -53,11 +53,15 @@ export function VerificationCodeForm({ email }: Readonly<{ email: string }>) {
     setIsResending(true);
     setMessage(undefined);
     try {
-      await resendVerificationCode(email);
+      const result = await resendVerificationCode(email);
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
       setMessage("Enviamos um novo código para o seu e-mail.");
       setResendSeconds(60);
-    } catch (error) {
-      setMessage(getAuthErrorMessage(error, "Não foi possível reenviar o código agora."));
+    } catch {
+      setMessage("Não foi possível reenviar o código agora.");
     } finally {
       setIsResending(false);
     }

@@ -2,13 +2,7 @@ import type { AccountStatus, AuthenticatedUser } from "@/lib/auth/auth.types";
 
 export type OAuthProvider = "google" | "apple";
 
-export interface AuthSession {
-  user: AuthenticatedUser;
-  expiresAt?: string;
-}
-
 export interface AuthApiResponse {
-  message?: string;
   token?: string;
   accessToken?: string;
   user?: AuthenticatedUser;
@@ -17,7 +11,20 @@ export interface AuthApiResponse {
   reason?: "INVALID" | "EXPIRED";
 }
 
-export interface AuthClientError {
+export interface ApiEnvelope<T> {
+  success: boolean;
   message: string;
+  data: T | null;
+}
+
+export interface ApiRequestResult<T> {
+  ok: boolean;
   status: number;
+  response: ApiEnvelope<T>;
+}
+
+export interface AuthClientResult<T = null> {
+  success: boolean;
+  message: string;
+  data: T | null;
 }

@@ -14,10 +14,7 @@ import { FormMessage } from "@/features/auth/components/form-message";
 import { PasswordField } from "@/features/auth/components/password-field";
 import { SocialAuthButtons } from "@/features/auth/components/social-auth-buttons";
 import { registrationSchema, type RegistrationInput } from "@/features/auth/schemas/registration.schema";
-import {
-  getAuthErrorMessage,
-  register as registerAccount,
-} from "@/features/auth/services/auth-client.service";
+import { register as registerAccount } from "@/features/auth/services/auth-client.service";
 
 export function RegistrationForm() {
   const router = useRouter();
@@ -42,15 +39,19 @@ export function RegistrationForm() {
   async function onSubmit(input: RegistrationInput) {
     setMessage(undefined);
     try {
-      await registerAccount({
+      const result = await registerAccount({
         name: input.name,
         email: input.email,
         birthDate: input.birthDate || undefined,
         password: input.password,
       });
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
       router.push(`/verificar-email?email=${encodeURIComponent(input.email)}`);
-    } catch (error) {
-      setMessage(getAuthErrorMessage(error, "Não foi possível concluir o cadastro. Tente novamente."));
+    } catch {
+      setMessage("Não foi possível concluir o cadastro. Tente novamente.");
     }
   }
 

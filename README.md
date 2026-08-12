@@ -30,9 +30,9 @@ O tema respeita a preferência do sistema e pode ser alternado entre claro e esc
 
 ## Contrato de autenticação
 
-O frontend usa Route Handlers como uma camada BFF e mantém a sessão em um cookie `HttpOnly`. `API_URL` é usada somente no servidor; `NEXT_PUBLIC_API_URL` permanece disponível para integrações públicas dos demais módulos.
+O frontend usa NextAuth com estratégia JWT. O token emitido pela API é mantido no JWT criptografado do NextAuth, armazenado em cookie `HttpOnly`, e não é exposto na sessão do cliente. `API_URL` é usada somente no servidor; `NEXT_PUBLIC_API_URL` permanece disponível para integrações públicas dos demais módulos.
 
-Os caminhos esperados estão centralizados em `src/features/auth/services/auth-endpoints.ts`. Login e callbacks OAuth devem retornar o token em `accessToken` ou `token`. A consulta de sessão deve retornar um objeto `user` com `id`, `name`, `email`, `status` e `permissions`.
+Todas as respostas da API devem seguir o envelope `{ success, message, data }`. Os caminhos esperados estão centralizados em `src/features/auth/services/auth-endpoints.ts`. Login e autenticação social devem retornar em `data` o token como `accessToken` ou `token` e um objeto `user` com `id`, `name`, `email`, `status` e `permissions`.
 
 Fluxos esperados da API:
 
@@ -43,8 +43,14 @@ Fluxos esperados da API:
 - `POST /auth/forgot-password`
 - `POST /auth/password-reset/validate`
 - `POST /auth/password-reset`
-- `GET /auth/session`
 - `POST /auth/logout`
-- `GET /auth/oauth/{provider}` e callback correspondente
+- `POST /auth/oauth/{provider}` para trocar a credencial do Google ou Apple por uma sessão da plataforma
 
-O dashboard exige uma sessão cujo usuário esteja com status `ACTIVE`. O `proxy.ts` faz apenas a verificação otimista do cookie; a validação definitiva é feita com a API no layout protegido.
+O dashboard exige uma sessão NextAuth cujo usuário esteja com status `ACTIVE`. Configure `NEXTAUTH_SECRET`, Google e Apple com as variáveis descritas em `.env.example`.
+
+Callbacks que devem ser cadastrados nos provedores:
+
+- Google: `{NEXTAUTH_URL}/api/auth/callback/google`
+- Apple: `{NEXTAUTH_URL}/api/auth/callback/apple`
+
+O `APPLE_CLIENT_SECRET` deve ser o client secret JWT gerado para o Service ID configurado na Apple.

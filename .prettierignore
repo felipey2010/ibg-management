@@ -1,5 +1,6 @@
 .next
 AGENTS.md
+*.webmanifest
 coverage
 node_modules
 package-lock.json

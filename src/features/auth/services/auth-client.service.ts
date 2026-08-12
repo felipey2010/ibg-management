@@ -1,6 +1,12 @@
 import axios from "axios";
+import { signIn, signOut } from "next-auth/react";
 
-import type { OAuthProvider } from "@/features/auth/types/auth.types";
+import type {
+  ApiEnvelope,
+  AuthApiResponse,
+  AuthClientResult,
+  OAuthProvider,
+} from "@/features/auth/types/auth.types";
 
 const authClient = axios.create({
   baseURL: "/api/auth",
@@ -8,55 +14,88 @@ const authClient = axios.create({
   withCredentials: true,
 });
 
-export async function login(input: { email: string; password: string }): Promise<void> {
-  await authClient.post("/login", input);
+function failure<T>(message: string): AuthClientResult<T> {
+  return { success: false, message, data: null };
 }
 
-export async function register(input: Record<string, unknown>): Promise<void> {
-  await authClient.post("/register", input);
-}
+async function post<T>(path: string, body: unknown): Promise<AuthClientResult<T>> {
+  try {
+    const { data } = await authClient.post<ApiEnvelope<T>>(path, body);
+    return { success: data.success, message: data.message, data: data.data };
+  } catch (error) {
+    if (axios.isAxiosError<ApiEnvelope<T>>(error)) {
+      if (!error.response) {
+        return failure("Não foi possível conectar ao serviço. Verifique sua conexão e tente novamente.");
+      }
 
-export async function verifyEmail(input: { email: string; code: string }): Promise<void> {
-  await authClient.post("/verify-email", input);
-}
+      if (error.response.status === 429) {
+        return failure("Muitas tentativas foram realizadas. Aguarde um momento e tente novamente.");
+      }
 
-export async function resendVerificationCode(email: string): Promise<void> {
-  await authClient.post("/resend-code", { email });
-}
-
-export async function requestPasswordRecovery(email: string): Promise<void> {
-  await authClient.post("/forgot-password", { email });
-}
-
-export async function validateResetToken(token: string): Promise<{ valid: boolean; reason?: string }> {
-  const { data } = await authClient.post<{ valid: boolean; reason?: string }>("/validate-reset-token", {
-    token,
-  });
-  return data;
-}
-
-export async function resetPassword(input: { token: string; password: string }): Promise<void> {
-  await authClient.post("/reset-password", input);
-}
-
-export async function logout(): Promise<void> {
-  await authClient.post("/logout");
-}
-
-export function getOAuthUrl(provider: OAuthProvider): string {
-  return `/api/auth/oauth/${provider}`;
-}
-
-export function getAuthErrorMessage(error: unknown, fallback: string): string {
-  if (axios.isAxiosError<{ message?: string }>(error)) {
-    if (!error.response) {
-      return "Não foi possível conectar ao serviço. Verifique sua conexão e tente novamente.";
+      return failure(error.response.data?.message ?? "Não foi possível concluir a solicitação.");
     }
 
-    if (error.response.status === 429) {
-      return "Muitas tentativas foram realizadas. Aguarde um momento e tente novamente.";
-    }
+    return failure("Ocorreu um erro inesperado. Tente novamente.");
   }
+}
 
-  return fallback;
+export async function login(input: { email: string; password: string }): Promise<AuthClientResult> {
+  try {
+    const result = await signIn("credentials", { ...input, redirect: false });
+    return result?.ok
+      ? { success: true, message: "Autenticação realizada.", data: null }
+      : failure("Não foi possível entrar. Verifique suas credenciais e tente novamente.");
+  } catch {
+    return failure("Não foi possível conectar ao serviço de autenticação.");
+  }
+}
+
+export async function loginWithProvider(provider: OAuthProvider): Promise<AuthClientResult> {
+  try {
+    await signIn(provider, { callbackUrl: "/dashboard" });
+    return { success: true, message: "Redirecionando para autenticação.", data: null };
+  } catch {
+    return failure("Não foi possível iniciar a autenticação com este provedor.");
+  }
+}
+
+export function register(input: Record<string, unknown>): Promise<AuthClientResult<AuthApiResponse>> {
+  return post<AuthApiResponse>("/register", input);
+}
+
+export function verifyEmail(input: {
+  email: string;
+  code: string;
+}): Promise<AuthClientResult<AuthApiResponse>> {
+  return post<AuthApiResponse>("/verify-email", input);
+}
+
+export function resendVerificationCode(email: string): Promise<AuthClientResult<AuthApiResponse>> {
+  return post<AuthApiResponse>("/resend-code", { email });
+}
+
+export function requestPasswordRecovery(email: string): Promise<AuthClientResult<AuthApiResponse>> {
+  return post<AuthApiResponse>("/forgot-password", { email });
+}
+
+export async function validateResetToken(
+  token: string,
+): Promise<AuthClientResult<{ valid?: boolean; reason?: "INVALID" | "EXPIRED" }>> {
+  return post("/validate-reset-token", { token });
+}
+
+export function resetPassword(input: {
+  token: string;
+  password: string;
+}): Promise<AuthClientResult<AuthApiResponse>> {
+  return post<AuthApiResponse>("/reset-password", input);
+}
+
+export async function logout(): Promise<AuthClientResult> {
+  try {
+    await signOut({ redirect: false });
+    return { success: true, message: "Sessão encerrada.", data: null };
+  } catch {
+    return failure("Não foi possível encerrar a sessão corretamente.");
+  }
 }
