@@ -14,7 +14,7 @@ export default function DashboardLoading() {
         {Array.from({ length: 4 }, (_, index) => (
           <div key={index} className="bg-card h-72 rounded-xl border p-5">
             <div className="bg-muted h-4 w-36 rounded" />
-            <div className="mt-8 space-y-4">
+            <div className="mt-8 flex flex-col gap-4">
               <div className="bg-muted h-10 rounded" />
               <div className="bg-muted h-10 rounded" />
               <div className="bg-muted h-10 rounded" />

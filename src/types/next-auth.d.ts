@@ -14,12 +14,15 @@ declare module "next-auth" {
     status?: AccountStatus;
     permissions?: string[];
     accessToken?: string;
+    refreshToken?: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     accessToken?: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
     userId: string;
     status: AccountStatus;
     permissions: string[];

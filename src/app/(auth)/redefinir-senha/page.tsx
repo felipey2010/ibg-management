@@ -11,10 +11,11 @@ interface PasswordResetPageProps {
 
 export default async function PasswordResetPage({ searchParams }: PasswordResetPageProps) {
   const params = await searchParams;
-  const token = typeof params.token === "string" ? params.token : undefined;
+  const email = typeof params.email === "string" ? params.email : undefined;
+  const code = typeof params.code === "string" ? params.code : undefined;
   return (
     <AuthShell title="Redefinir senha">
-      <PasswordResetFlow token={token} />
+      <PasswordResetFlow email={email} code={code} />
     </AuthShell>
   );
 }

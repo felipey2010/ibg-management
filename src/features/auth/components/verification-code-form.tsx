@@ -74,13 +74,15 @@ export function VerificationCodeForm({ email }: Readonly<{ email: string }>) {
         description="Seu cadastro foi confirmado e agora aguarda a aprovação da administração."
         icon={<BadgeCheck aria-hidden="true" className="size-5" />}
       >
-        <span className="bg-card text-muted-foreground rounded-xl border p-5 text-sm leading-6">
-          Você receberá um e-mail quando um administrador aprovar sua solicitação. Depois disso, poderá
-          acessar a plataforma normalmente.
-        </span>
-        <Button nativeButton={false} render={<Link href="/login" />} size="lg" className="mt-5 h-11 w-full">
-          Voltar para o login
-        </Button>
+        <div className="flex flex-col gap-4">
+          <span className="bg-card text-muted-foreground rounded-xl border p-5 text-sm leading-6">
+            Você receberá um e-mail quando um administrador aprovar sua solicitação. Depois disso, poderá
+            acessar a plataforma normalmente.
+          </span>
+          <Button nativeButton={false} render={<Link href="/login" />} size="lg" className="h-11 w-full">
+            Voltar para o login
+          </Button>
+        </div>
       </AuthCard>
     );
   }
@@ -91,7 +93,7 @@ export function VerificationCodeForm({ email }: Readonly<{ email: string }>) {
       description={`Enviamos um código de seis dígitos para ${email}.`}
       icon={<MailCheck aria-hidden="true" className="size-5" />}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="5" noValidate>
         <FormMessage>{message}</FormMessage>
         <Controller
           control={control}

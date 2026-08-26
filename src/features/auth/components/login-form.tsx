@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { FormField } from "@/features/auth/components/form-field";
 import { FormMessage } from "@/features/auth/components/form-message";
 import { PasswordField } from "@/features/auth/components/password-field";
-import { SocialAuthButtons } from "@/features/auth/components/social-auth-buttons";
 import { loginSchema, type LoginInput } from "@/features/auth/schemas/login.schema";
 import { login } from "@/features/auth/services/auth-client.service";
 
@@ -65,7 +64,7 @@ export function LoginForm({
           Entre para continuar para o painel administrativo.
         </p>
       </header>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         <FormMessage>{message}</FormMessage>
         <FormField id="email" label="E-mail" error={errors.email?.message}>
           <div className="relative">
@@ -97,17 +96,13 @@ export function LoginForm({
         </FormField>
         <div className="flex justify-end">
           <Link href="/recuperar-senha" className="text-primary text-sm font-medium hover:underline">
-            Esqueci minha senha
+            Esqueceu a senha?
           </Link>
         </div>
         <Button type="submit" size="lg" className="h-11 w-full" disabled={isSubmitting}>
           {isSubmitting ? "Entrando…" : "Entrar"}
         </Button>
       </form>
-      <div className="text-tertiary before:bg-border after:bg-border my-6 flex items-center gap-3 text-xs before:h-px before:flex-1 after:h-px after:flex-1">
-        ou continue com
-      </div>
-      <SocialAuthButtons />
       <p className="text-muted-foreground mt-7 text-center text-sm">
         Ainda não possui uma conta?{" "}
         <Link href="/cadastro" className="text-primary font-semibold hover:underline">

@@ -3,8 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { Controller, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,38 +12,82 @@ import { Input } from "@/components/ui/input";
 import { FormField } from "@/features/auth/components/form-field";
 import { FormMessage } from "@/features/auth/components/form-message";
 import { PasswordField } from "@/features/auth/components/password-field";
-import { SocialAuthButtons } from "@/features/auth/components/social-auth-buttons";
 import { registrationSchema, type RegistrationInput } from "@/features/auth/schemas/registration.schema";
-import { register as registerAccount } from "@/features/auth/services/auth-client.service";
+import { checkUsername, register as registerAccount } from "@/features/auth/services/auth-client.service";
+
+type UsernameState = "idle" | "checking" | "available" | "taken" | "error";
 
 export function RegistrationForm() {
   const router = useRouter();
   const [message, setMessage] = useState<string>();
+  const [usernameState, setUsernameState] = useState<UsernameState>("idle");
+  const [checkedUsername, setCheckedUsername] = useState("");
   const {
     register,
     control,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<RegistrationInput>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
-      name: "",
+      full_name: "",
+      username: "",
       email: "",
-      birthDate: "",
       password: "",
       passwordConfirmation: "",
       acceptedTerms: false,
     },
   });
+  const username = useWatch({ control, name: "username" });
+  const usernameCandidate = username.trim();
+  const isUsernameCandidateValid =
+    usernameCandidate.length >= 3 &&
+    usernameCandidate.length <= 50 &&
+    /^[a-zA-Z0-9._-]+$/.test(usernameCandidate);
+  const visibleUsernameState =
+    isUsernameCandidateValid && checkedUsername === usernameCandidate ? usernameState : "idle";
+
+  useEffect(() => {
+    const candidate = username.trim();
+    if (candidate.length < 3 || candidate.length > 50 || !/^[a-zA-Z0-9._-]+$/.test(candidate)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setCheckedUsername(candidate);
+      setUsernameState("checking");
+      try {
+        const result = await checkUsername(candidate, controller.signal);
+        if (!result.success || !result.data) {
+          setUsernameState("error");
+          return;
+        }
+        setUsernameState(result.data.available ? "available" : "taken");
+      } catch {
+        if (!controller.signal.aborted) setUsernameState("error");
+      }
+    }, 450);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [username]);
 
   async function onSubmit(input: RegistrationInput) {
     setMessage(undefined);
+    if (visibleUsernameState !== "available") {
+      setError("username", { message: "Confirme um nome de usuário disponível." });
+      return;
+    }
     try {
       const result = await registerAccount({
-        name: input.name,
+        username: input.username,
         email: input.email,
-        birthDate: input.birthDate || undefined,
         password: input.password,
+        full_name: input.full_name,
       });
       if (!result.success) {
         setMessage(result.message);
@@ -63,22 +107,45 @@ export function RegistrationForm() {
           Seu cadastro será analisado pela administração da igreja.
         </p>
       </header>
-      <SocialAuthButtons action="Cadastrar" />
-      <div className="text-tertiary before:bg-border after:bg-border my-6 flex items-center gap-3 text-xs before:h-px before:flex-1 after:h-px after:flex-1">
-        ou
-      </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         <FormMessage>{message}</FormMessage>
-        <FormField id="name" label="Nome completo" error={errors.name?.message}>
+        <FormField id="full-name" label="Nome completo" error={errors.full_name?.message}>
           <Input
-            id="name"
+            id="full-name"
             autoComplete="name"
             className="h-11"
-            aria-invalid={Boolean(errors.name)}
-            {...register("name")}
+            aria-invalid={Boolean(errors.full_name)}
+            {...register("full_name")}
           />
         </FormField>
         <div className="grid gap-4 sm:grid-cols-2">
+          <FormField id="register-username" label="Nome de usuário" error={errors.username?.message}>
+            <Input
+              id="register-username"
+              autoComplete="username"
+              className="h-11"
+              aria-invalid={Boolean(errors.username) || visibleUsernameState === "taken"}
+              aria-describedby="username-availability"
+              {...register("username")}
+            />
+            <p
+              id="username-availability"
+              role="status"
+              aria-live="polite"
+              className={
+                visibleUsernameState === "available"
+                  ? "text-xs text-emerald-700"
+                  : visibleUsernameState === "taken" || visibleUsernameState === "error"
+                    ? "text-destructive text-xs"
+                    : "text-muted-foreground text-xs"
+              }
+            >
+              {visibleUsernameState === "checking" && "Verificando disponibilidade…"}
+              {visibleUsernameState === "available" && "Nome de usuário disponível."}
+              {visibleUsernameState === "taken" && "Este nome de usuário já está em uso."}
+              {visibleUsernameState === "error" && "Não foi possível verificar a disponibilidade."}
+            </p>
+          </FormField>
           <FormField id="register-email" label="E-mail" error={errors.email?.message}>
             <Input
               id="register-email"
@@ -87,15 +154,6 @@ export function RegistrationForm() {
               className="h-11"
               aria-invalid={Boolean(errors.email)}
               {...register("email")}
-            />
-          </FormField>
-          <FormField id="birthDate" label="Data de nascimento (opcional)" error={errors.birthDate?.message}>
-            <Input
-              id="birthDate"
-              type="date"
-              autoComplete="bday"
-              className="h-11"
-              {...register("birthDate")}
             />
           </FormField>
         </div>
@@ -134,8 +192,15 @@ export function RegistrationForm() {
                   className="mt-0.5"
                 />
                 <span>
-                  Li e concordo com os <span className="text-foreground font-medium">Termos de uso</span> e a{" "}
-                  <span className="text-foreground font-medium">Política de privacidade</span>.
+                  Li e concordo com os{" "}
+                  <Link href="/terms" target="_blank" className="font-medium hover:underline">
+                    Termos de uso
+                  </Link>{" "}
+                  e a{" "}
+                  <Link href="/privacy" target="_blank" className="font-medium hover:underline">
+                    Política de privacidade
+                  </Link>
+                  .
                 </span>
               </label>
               {errors.acceptedTerms ? (
@@ -146,7 +211,12 @@ export function RegistrationForm() {
             </div>
           )}
         />
-        <Button type="submit" size="lg" className="h-11 w-full" disabled={isSubmitting}>
+        <Button
+          type="submit"
+          size="lg"
+          className="h-11 w-full"
+          disabled={isSubmitting || visibleUsernameState === "checking" || visibleUsernameState === "taken"}
+        >
           {isSubmitting ? "Enviando cadastro…" : "Cadastrar"}
         </Button>
       </form>

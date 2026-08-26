@@ -22,5 +22,9 @@ describe("recuperação de senha", () => {
 
     expect(await screen.findByText(/Se existir uma conta associada a este e-mail/i)).toBeInTheDocument();
     expect(screen.queryByText(/Conta inexistente/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Informar código de verificação" })).toHaveAttribute(
+      "href",
+      "/redefinir-senha?email=pessoa%40example.com",
+    );
   });
 });

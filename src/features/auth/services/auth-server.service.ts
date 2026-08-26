@@ -8,14 +8,14 @@ function getApiUrl(): string | null {
 }
 
 function errorEnvelope<T>(message: string): ApiEnvelope<T> {
-  return { success: false, message, data: null };
+  return { success: false, message };
 }
 
 function isApiEnvelope<T>(value: unknown): value is ApiEnvelope<T> {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Record<string, unknown>;
   return (
-    typeof candidate.success === "boolean" && typeof candidate.message === "string" && "data" in candidate
+    typeof candidate.success === "boolean" && typeof candidate.message === "string"
   );
 }
 

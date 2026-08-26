@@ -18,6 +18,7 @@ import { requestPasswordRecovery } from "@/features/auth/services/auth-client.se
 
 export function PasswordRecoveryForm() {
   const [wasSubmitted, setWasSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
   const {
     register,
     handleSubmit,
@@ -28,6 +29,7 @@ export function PasswordRecoveryForm() {
   });
 
   async function onSubmit(input: PasswordRecoveryInput) {
+    setSubmittedEmail(input.email.trim().toLowerCase());
     try {
       await requestPasswordRecovery(input.email);
     } catch {
@@ -45,18 +47,28 @@ export function PasswordRecoveryForm() {
         description="Se existir uma conta associada a este e-mail, enviaremos as instruções para redefinir sua senha."
         icon={<Send aria-hidden="true" className="size-5" />}
       >
-        <div className="bg-card text-muted-foreground rounded-xl border p-5 text-sm leading-6">
-          Verifique também as pastas de spam e lixo eletrônico. O link terá validade limitada por segurança.
+        <div className="flex flex-col gap-4">
+          <span className="bg-card text-muted-foreground rounded-xl border p-5 text-sm leading-6">
+            Verifique também as pastas de spam e lixo eletrônico. O código será válido por 15 minutos.
+          </span>
+          <Button
+            nativeButton={false}
+            render={<Link href={`/redefinir-senha?email=${encodeURIComponent(submittedEmail)}`} />}
+            size="lg"
+            className="h-11 w-full"
+          >
+            Informar código de verificação
+          </Button>
+          <Button
+            nativeButton={false}
+            render={<Link href="/login" />}
+            variant="outline"
+            size="lg"
+            className="h-11 w-full"
+          >
+            Voltar para o login
+          </Button>
         </div>
-        <Button
-          nativeButton={false}
-          render={<Link href="/login" />}
-          variant="outline"
-          size="lg"
-          className="mt-5 h-11 w-full"
-        >
-          Voltar para o login
-        </Button>
       </AuthCard>
     );
   }
@@ -67,7 +79,7 @@ export function PasswordRecoveryForm() {
       description="Informe seu e-mail para receber as instruções de redefinição."
       icon={<Mail aria-hidden="true" className="size-5" />}
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
         <FormField id="recovery-email" label="E-mail" error={errors.email?.message}>
           <Input
             id="recovery-email"

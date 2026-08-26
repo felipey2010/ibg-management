@@ -8,9 +8,14 @@ const passwordSchema = z
 
 export const registrationSchema = z
   .object({
-    name: z.string().trim().min(3, "Informe seu nome completo."),
+    full_name: z.string().trim().min(2, "Informe seu nome completo."),
+    username: z
+      .string()
+      .trim()
+      .min(3, "Use pelo menos 3 caracteres.")
+      .max(50, "Use no máximo 50 caracteres.")
+      .regex(/^[a-zA-Z0-9._-]+$/, "Use apenas letras, números, ponto, hífen ou sublinhado."),
     email: z.string().trim().email("Informe um e-mail válido."),
-    birthDate: z.string().optional(),
     password: passwordSchema,
     passwordConfirmation: z.string().min(1, "Confirme sua senha."),
     acceptedTerms: z.boolean().refine(Boolean, "Você precisa aceitar os termos para continuar."),

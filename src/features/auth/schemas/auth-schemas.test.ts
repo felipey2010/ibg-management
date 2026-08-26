@@ -11,9 +11,9 @@ describe("schemas de autenticação", () => {
 
   it("aceita um cadastro válido", () => {
     const result = registrationSchema.safeParse({
-      name: "Maria da Silva",
+      full_name: "Maria da Silva",
+      username: "maria.silva",
       email: "maria@example.com",
-      birthDate: "1990-05-12",
       password: "senha123",
       passwordConfirmation: "senha123",
       acceptedTerms: true,

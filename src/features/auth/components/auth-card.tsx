@@ -11,9 +11,9 @@ interface AuthCardProps {
 export function AuthCard({ title, description, icon, children, className }: Readonly<AuthCardProps>) {
   return (
     <div className={cn("w-full max-w-md", className)}>
-      <header className="mb-7 text-center">
+      <header className="mb-7 flex flex-col gap-4 text-center">
         {icon ? (
-          <span className="bg-primary/10 text-primary mx-auto mb-4 flex size-11 items-center justify-center rounded-full">
+          <span className="bg-primary/10 text-primary mx-auto flex size-11 items-center justify-center rounded-full">
             {icon}
           </span>
         ) : null}

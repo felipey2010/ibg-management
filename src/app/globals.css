@@ -5,8 +5,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-fraunces);
+  --font-inter: var(--font-inter);
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-poppins: Poppins, sans-serif;
+  --font-fraunces: var(--font-fraunces), serif;
+  --font-mono: var(--font-plex-mono), monospace;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -35,10 +39,11 @@
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+
+  --radius-sm: calc(var(--radius) * 0.7);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.35);
+  --radius-xl: calc(var(--radius) * 1.8);
 }
 
 :root {
@@ -66,7 +71,7 @@
   --border: #dcd8d0;
   --input: #d6d2ca;
   --ring: #bc3131;
-  --radius: 0.625rem;
+  --radius: 0.5rem;
   --sidebar: #ebe9e4;
   --sidebar-foreground: #303137;
   --sidebar-accent: #ded6c8;
@@ -112,7 +117,7 @@
   }
 
   html {
-    @apply font-sans;
+    @apply font-inter;
   }
 
   body {

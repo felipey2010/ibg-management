@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 export function SidebarNavigation({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   return (
-    <nav aria-label="Navegação principal" className="space-y-6">
+    <nav aria-label="Navegação principal" className="flex flex-col gap-6">
       {navigationGroups.map((group) => (
         <section key={group.label} aria-labelledby={`nav-${group.label}`}>
           <h2
@@ -14,7 +14,7 @@ export function SidebarNavigation({ onNavigate }: Readonly<{ onNavigate?: () => 
           >
             {group.label}
           </h2>
-          <ul className="space-y-1">
+          <ul className="flex flex-col gap-1">
             {group.items.map((item) => {
               const Icon = item.icon;
               const isActive = item.href === "/dashboard";

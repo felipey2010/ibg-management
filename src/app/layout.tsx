@@ -1,22 +1,8 @@
-import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
-
-import { AppProviders } from "@/providers/app-providers";
-
 import { siteConfig } from "@/config/site";
+import { AppProviders } from "@/providers/app-providers";
+import type { Metadata } from "next";
+import { fraunces, ibmPlexMono, ibmPlexSans, inter, poppins } from "./fonts";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: {
@@ -29,7 +15,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${inter.variable} ${fraunces.variable} min-h-dvh antialiased`}>
+      <body
+        className={`${inter.variable} ${inter.className} ${fraunces.variable} ${fraunces.className} ${ibmPlexSans.className} ${ibmPlexSans.variable} ${poppins.variable} ${fraunces.variable} ${ibmPlexMono.variable} bg-background min-h-dvh antialiased`}
+      >
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

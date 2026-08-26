@@ -10,7 +10,7 @@ interface FormFieldProps {
 export function FormField({ id, label, error, children }: Readonly<FormFieldProps>) {
   const errorId = `${id}-error`;
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <Label htmlFor={id}>{label}</Label>
       {children}
       {error ? (

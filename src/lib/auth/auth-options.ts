@@ -1,43 +1,36 @@
 import "server-only";
 
-import type { Account, NextAuthOptions, User } from "next-auth";
-import AppleProvider from "next-auth/providers/apple";
+import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
 
 import { authEndpoints } from "@/features/auth/services/auth-endpoints";
 import { requestAuthApi } from "@/features/auth/services/auth-server.service";
-import type { AuthApiResponse, OAuthProvider } from "@/features/auth/types/auth.types";
+import type { AuthTokens, AuthUserResponse } from "@/features/auth/types/auth.types";
 import type { AuthenticatedUser } from "@/lib/auth/auth.types";
+import { sanitizeEmail } from "@/features/auth/services/auth-input-sanitizer";
 
 interface PlatformUser extends AuthenticatedUser {
   accessToken: string;
+  refreshToken: string;
+  accessTokenExpires: number;
 }
 
-function toPlatformUser(data: AuthApiResponse | null): PlatformUser | null {
-  const accessToken = data?.accessToken ?? data?.token;
-  if (!accessToken || !data?.user) return null;
-  return { ...data.user, accessToken };
+function expiresAt(duration: string): number {
+  const match = /^(\d+)([smhd])$/.exec(duration);
+  if (!match) return Date.now() + 15 * 60 * 1000;
+
+  const value = Number(match[1]);
+  const unitInMilliseconds = { s: 1_000, m: 60_000, h: 3_600_000, d: 86_400_000 } as const;
+  return Date.now() + value * unitInMilliseconds[match[2] as keyof typeof unitInMilliseconds];
 }
 
-async function authenticateWithProvider(
-  provider: OAuthProvider,
-  user: User,
-  account: Account,
-): Promise<PlatformUser | null> {
-  const result = await requestAuthApi<AuthApiResponse>(authEndpoints.oauth(provider), {
+async function refreshAccessToken(refreshToken: string): Promise<AuthTokens | null> {
+  const result = await requestAuthApi<AuthTokens>(authEndpoints.refresh, {
     method: "POST",
-    body: JSON.stringify({
-      provider,
-      providerAccountId: account.providerAccountId,
-      accessToken: account.access_token,
-      idToken: account.id_token,
-      email: user.email,
-      name: user.name,
-    }),
+    body: JSON.stringify({ refreshToken }),
   });
 
-  return result.ok ? toPlatformUser(result.response.data) : null;
+  return result.ok ? (result.response.data ?? null) : null;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -55,24 +48,35 @@ export const authOptions: NextAuthOptions = {
         try {
           if (!credentials?.email || !credentials.password) return null;
 
-          const result = await requestAuthApi<AuthApiResponse>(authEndpoints.login, {
+          const result = await requestAuthApi<AuthTokens>(authEndpoints.login, {
             method: "POST",
-            body: JSON.stringify({ email: credentials.email, password: credentials.password }),
+            body: JSON.stringify({ email: sanitizeEmail(credentials.email), password: credentials.password }),
           });
+          const tokens = result.response.data;
+          if (!result.ok || !tokens) return null;
 
-          return result.ok ? toPlatformUser(result.response.data) : null;
+          const currentUser = await requestAuthApi<AuthUserResponse>(
+            authEndpoints.me,
+            { method: "GET" },
+            tokens.accessToken,
+          );
+          const user = currentUser.response.data;
+          if (!currentUser.ok || !user) return null;
+
+          return {
+            id: user.id,
+            name: user.fullName,
+            email: user.email,
+            status: "ACTIVE",
+            permissions: [],
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            accessTokenExpires: expiresAt(tokens.expiresIn),
+          };
         } catch {
           return null;
         }
       },
-    }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-    }),
-    AppleProvider({
-      clientId: process.env.APPLE_CLIENT_ID ?? "",
-      clientSecret: process.env.APPLE_CLIENT_SECRET ?? "",
     }),
   ],
   callbacks: {
@@ -80,17 +84,9 @@ export const authOptions: NextAuthOptions = {
       try {
         if (!account) return false;
 
-        if (account.provider === "credentials") {
-          const platformUser = user as PlatformUser;
-          return Boolean(platformUser.accessToken) && platformUser.status === "ACTIVE";
-        }
-
-        if (account.provider !== "google" && account.provider !== "apple") return false;
-        const platformUser = await authenticateWithProvider(account.provider, user, account);
-        if (!platformUser) return false;
-
-        Object.assign(user, platformUser);
-        return platformUser.status === "ACTIVE";
+        if (account.provider !== "credentials") return false;
+        const platformUser = user as PlatformUser;
+        return Boolean(platformUser.accessToken && platformUser.refreshToken);
       } catch {
         return false;
       }
@@ -100,10 +96,21 @@ export const authOptions: NextAuthOptions = {
         if (user) {
           const platformUser = user as PlatformUser;
           token.accessToken = platformUser.accessToken;
+          token.refreshToken = platformUser.refreshToken;
+          token.accessTokenExpires = platformUser.accessTokenExpires;
           token.userId = platformUser.id;
           token.status = platformUser.status;
           token.permissions = platformUser.permissions;
         }
+        if (token.accessTokenExpires && Date.now() < token.accessTokenExpires - 30_000) return token;
+
+        if (!token.refreshToken) return token;
+        const refreshedTokens = await refreshAccessToken(token.refreshToken);
+        if (!refreshedTokens) return token;
+
+        token.accessToken = refreshedTokens.accessToken;
+        token.refreshToken = refreshedTokens.refreshToken;
+        token.accessTokenExpires = expiresAt(refreshedTokens.expiresIn);
         return token;
       } catch {
         return token;
@@ -125,8 +132,11 @@ export const authOptions: NextAuthOptions = {
   events: {
     async signOut({ token }) {
       try {
-        if (token?.accessToken) {
-          await requestAuthApi(authEndpoints.logout, { method: "POST" }, token.accessToken);
+        if (token?.refreshToken) {
+          await requestAuthApi(authEndpoints.logout, {
+            method: "POST",
+            body: JSON.stringify({ refreshToken: token.refreshToken }),
+          });
         }
       } catch {
         // NextAuth must still remove its local session if API revocation is unavailable.

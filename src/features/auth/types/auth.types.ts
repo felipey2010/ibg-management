@@ -1,20 +1,43 @@
-import type { AccountStatus, AuthenticatedUser } from "@/lib/auth/auth.types";
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: string;
+}
+
+export interface AuthUserResponse {
+  id: string;
+  email: string;
+  fullName: string;
+}
+
+export interface RegistrationResponse {
+  email: string;
+}
+
+export interface PasswordResetVerificationResponse {
+  resetToken: string;
+  expiresIn: string;
+}
 
 export type OAuthProvider = "google" | "apple";
 
-export interface AuthApiResponse {
-  token?: string;
-  accessToken?: string;
-  user?: AuthenticatedUser;
-  status?: AccountStatus;
-  valid?: boolean;
-  reason?: "INVALID" | "EXPIRED";
+export interface RegistrationRequest {
+  username: string;
+  email: string;
+  password: string;
+  full_name: string;
+}
+
+export interface UsernameAvailability {
+  username: string;
+  available: boolean;
 }
 
 export interface ApiEnvelope<T> {
   success: boolean;
   message: string;
-  data: T | null;
+  data?: T;
+  errors?: Array<{ field?: string; message: string }>;
 }
 
 export interface ApiRequestResult<T> {
