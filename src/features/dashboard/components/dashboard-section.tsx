@@ -24,7 +24,7 @@ export function DashboardSection({
           <h2 className="text-sm font-semibold">{title}</h2>
           <p className="text-muted-foreground mt-1 text-xs">{description}</p>
         </div>
-        <Link href="/dashboard" className="text-info shrink-0 text-xs font-medium hover:underline">
+        <Link href="/" className="text-info shrink-0 text-xs font-medium hover:underline">
           {linkLabel}
         </Link>
       </header>

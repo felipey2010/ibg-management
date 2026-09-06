@@ -1,26 +1,35 @@
-import { Brand } from "@/components/layout/brand";
+import { ChurchBrand } from "@/features/church/components/church-brand";
 import { SidebarNavigation } from "@/components/layout/sidebar-navigation";
-import { LogoutButton } from "@/features/auth/components/logout-button";
+import { SidebarUserMenu } from "@/components/layout/sidebar-user-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarRail,
+  SidebarSeparator,
+} from "@/components/ui/sidebar";
 
-export function AppSidebar() {
+interface SidebarUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
+export function AppSidebar({ user }: Readonly<{ user: SidebarUser }>) {
   return (
-    <aside className="border-sidebar-border bg-sidebar fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r lg:flex">
-      <div className="border-sidebar-border flex h-16 items-center border-b px-4">
-        <Brand />
-      </div>
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="border-border h-16 justify-center border-b px-3">
+        <ChurchBrand />
+      </SidebarHeader>
+      <SidebarContent className="py-4">
         <SidebarNavigation />
-      </div>
-      <div className="border-sidebar-border flex items-center gap-3 border-t px-4 py-4">
-        <span className="border-border bg-surface-elevated flex size-8 items-center justify-center rounded-full border text-xs font-semibold">
-          DF
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-semibold">Philip Akpanyi</span>
-          <span className="text-muted-foreground block truncate text-[0.68rem]">Administrador</span>
-        </span>
-        <LogoutButton />
-      </div>
-    </aside>
+      </SidebarContent>
+      <SidebarSeparator className="mx-0" />
+      <SidebarFooter>
+        <SidebarUserMenu user={user} />
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   );
 }

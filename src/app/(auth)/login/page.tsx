@@ -13,7 +13,7 @@ interface LoginPageProps {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const [session, params] = await Promise.all([getSession(), searchParams]);
-  if (session?.user.status === "ACTIVE") redirect("/dashboard");
+  if (session?.user.status === "ACTIVE") redirect("/");
 
   const redirectTo = typeof params.redirectTo === "string" ? params.redirectTo : undefined;
   const oauthError = typeof params.error === "string" ? params.error : undefined;

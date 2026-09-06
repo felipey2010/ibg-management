@@ -1,20 +1,30 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import { getSession } from "@/lib/auth/session";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { ChurchSettingsBoundary } from "@/features/church/components/church-settings-boundary";
+import { getApiSession } from "@/lib/auth/api-session";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import ProtectedLoading from "./loading";
 
 export default async function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const session = await getSession();
+  const session = await getApiSession();
 
   if (!session || session.user.status !== "ACTIVE") {
     redirect("/login?error=session");
   }
 
   return (
-    <div className="bg-background min-h-dvh">
-      <AppSidebar />
-      <AppHeader />
-      <main className="px-4 py-8 sm:px-6 lg:ml-64 lg:px-8 lg:py-9">{children}</main>
-    </div>
+    <Suspense fallback={<ProtectedLoading />}>
+      <ChurchSettingsBoundary key={session.user.id}>
+        <SidebarProvider>
+          <AppSidebar user={session.user} />
+          <SidebarInset>
+            <AppHeader />
+            <div className="px-4 py-8 sm:px-6 lg:px-8 lg:py-9">{children}</div>
+          </SidebarInset>
+        </SidebarProvider>
+      </ChurchSettingsBoundary>
+    </Suspense>
   );
 }

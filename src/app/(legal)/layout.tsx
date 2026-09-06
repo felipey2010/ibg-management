@@ -10,7 +10,7 @@ function LegalPageLayout({ children }: { children: React.ReactNode }) {
     <div className="bg-muted/20 flex min-h-dvh flex-col">
       <header className="bg-background/95 px:4 sticky top-0 z-40 col-span-full flex h-14 items-center justify-between border-b backdrop-blur sm:px-8">
         <div className="flex h-full w-full items-center px-4 md:w-54">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5">
             <Image src={siteConfig.logo} alt={siteConfig.name} width={28} height={28} />
             <div>
               <strong className="block text-sm leading-none">{siteConfig.name}</strong>

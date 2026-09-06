@@ -46,8 +46,7 @@ export function LoginForm({
         setMessage(result.message);
         return;
       }
-      const destination =
-        redirectTo?.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/dashboard";
+      const destination = redirectTo?.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";
       router.replace(destination);
       router.refresh();
     } catch {

@@ -17,7 +17,7 @@ export const navigationGroups = [
   {
     label: "Principal",
     items: [
-      { label: "Painel", href: "/dashboard", icon: LayoutDashboard, available: true },
+      { label: "Painel", href: "/", icon: LayoutDashboard, available: true },
       { label: "Membros", href: "/membros", icon: UsersRound, available: false },
       { label: "Ministérios", href: "/ministerios", icon: UserRound, available: false },
       { label: "Avisos", href: "/avisos", icon: Megaphone, available: false },
@@ -50,7 +50,7 @@ export const navigationGroups = [
         label: "Configurações da igreja",
         href: "/configuracoes/igreja",
         icon: Settings,
-        available: false,
+        available: true,
       },
       {
         label: "Usuários e permissões",

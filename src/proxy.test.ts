@@ -11,11 +11,11 @@ describe("proteção otimista do dashboard", () => {
 
   it("redireciona visitantes sem sessão para o login", async () => {
     vi.mocked(getToken).mockResolvedValueOnce(null);
-    const response = await proxy(new NextRequest("http://localhost/dashboard?tab=hoje"));
+    const response = await proxy(new NextRequest("http://localhost?tab=hoje"));
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost/login?redirectTo=%2Fdashboard%3Ftab%3Dhoje",
+      "http://localhost/login?redirectTo=%2F%3Ftab%3Dhoje",
     );
   });
 
@@ -25,14 +25,14 @@ describe("proteção otimista do dashboard", () => {
       userId: "user-1",
       permissions: [],
     });
-    const response = await proxy(new NextRequest("http://localhost/dashboard"));
+    const response = await proxy(new NextRequest("http://localhost/"));
 
     expect(response.headers.get("x-middleware-next")).toBe("1");
   });
 
   it("trata falhas na leitura da sessão como acesso não autenticado", async () => {
     vi.mocked(getToken).mockRejectedValueOnce(new Error("invalid token"));
-    const response = await proxy(new NextRequest("http://localhost/dashboard"));
+    const response = await proxy(new NextRequest("http://localhost/"));
 
     expect(response.status).toBe(307);
   });

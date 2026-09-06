@@ -655,7 +655,7 @@ Use meaningful route structures.
 Examples:
 
 ```text
-/dashboard
+/
 
 /membros
 /membros/novo
