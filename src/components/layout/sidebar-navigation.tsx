@@ -8,14 +8,13 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { navigationGroups } from "@/config/navigation";
 
-export function SidebarNavigation() {
+export function SidebarNavigation({ permissions }: Readonly<{ permissions: string[] }>) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
 
@@ -27,6 +26,12 @@ export function SidebarNavigation() {
           <SidebarGroupContent>
             <SidebarMenu>
               {group.items.map((item) => {
+                if (
+                  "permission" in item &&
+                  !permissions.includes("*") &&
+                  !permissions.includes(item.permission)
+                )
+                  return null;
                 const Icon = item.icon;
                 const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
@@ -44,11 +49,6 @@ export function SidebarNavigation() {
                     >
                       <Icon aria-hidden="true" />
                       <span>{item.label}</span>
-                      {"badge" in item ? (
-                        <SidebarMenuBadge className="bg-warning/15 text-warning">
-                          {item.badge}
-                        </SidebarMenuBadge>
-                      ) : null}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

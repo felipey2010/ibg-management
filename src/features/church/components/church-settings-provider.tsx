@@ -7,7 +7,6 @@ import type { ChurchSettings, ChurchSettingsResult } from "../church-settings.ty
 
 const ChurchSettingsContext = createContext<{
   settings: ChurchSettings;
-  canEdit: boolean;
   setSettings: (settings: ChurchSettings) => void;
 } | null>(null);
 
@@ -53,7 +52,6 @@ export function ChurchSettingsProvider({
     <ChurchSettingsContext.Provider
       value={{
         settings: result.settings,
-        canEdit: result.canEdit,
         setSettings: (settings) => setResult({ ...result, settings }),
       }}
     >

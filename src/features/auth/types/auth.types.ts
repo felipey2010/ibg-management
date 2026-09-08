@@ -2,12 +2,15 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   expiresIn: string;
+  refreshExpiresIn: string;
 }
 
 export interface AuthUserResponse {
   id: string;
   email: string;
   fullName: string;
+  status: "ACTIVE";
+  permissions: string[];
 }
 
 export interface RegistrationResponse {

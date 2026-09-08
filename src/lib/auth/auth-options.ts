@@ -9,28 +9,13 @@ import type { AuthTokens, AuthUserResponse } from "@/features/auth/types/auth.ty
 import type { AuthenticatedUser } from "@/lib/auth/auth.types";
 import { sanitizeEmail } from "@/features/auth/services/auth-input-sanitizer";
 
+import { expiresAt, invalidateToken, validateToken } from "./token-lifecycle";
+
 interface PlatformUser extends AuthenticatedUser {
   accessToken: string;
   refreshToken: string;
   accessTokenExpires: number;
-}
-
-function expiresAt(duration: string): number {
-  const match = /^(\d+)([smhd])$/.exec(duration);
-  if (!match) return Date.now() + 15 * 60 * 1000;
-
-  const value = Number(match[1]);
-  const unitInMilliseconds = { s: 1_000, m: 60_000, h: 3_600_000, d: 86_400_000 } as const;
-  return Date.now() + value * unitInMilliseconds[match[2] as keyof typeof unitInMilliseconds];
-}
-
-async function refreshAccessToken(refreshToken: string): Promise<AuthTokens | null> {
-  const result = await requestAuthApi<AuthTokens>(authEndpoints.refresh, {
-    method: "POST",
-    body: JSON.stringify({ refreshToken }),
-  });
-
-  return result.ok ? (result.response.data ?? null) : null;
+  refreshTokenExpires: number;
 }
 
 export const authOptions: NextAuthOptions = {
@@ -61,17 +46,19 @@ export const authOptions: NextAuthOptions = {
             tokens.accessToken,
           );
           const user = currentUser.response.data;
-          if (!currentUser.ok || !user) return null;
+          if (!currentUser.ok || !user || user.status !== "ACTIVE" || !Array.isArray(user.permissions))
+            return null;
 
           return {
             id: user.id,
             name: user.fullName,
             email: user.email,
             status: "ACTIVE",
-            permissions: [],
+            permissions: user.permissions,
             accessToken: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             accessTokenExpires: expiresAt(tokens.expiresIn),
+            refreshTokenExpires: expiresAt(tokens.refreshExpiresIn),
           };
         } catch {
           return null;
@@ -98,26 +85,21 @@ export const authOptions: NextAuthOptions = {
           token.accessToken = platformUser.accessToken;
           token.refreshToken = platformUser.refreshToken;
           token.accessTokenExpires = platformUser.accessTokenExpires;
+          token.refreshTokenExpires = platformUser.refreshTokenExpires;
+          token.error = undefined;
           token.userId = platformUser.id;
           token.status = platformUser.status;
           token.permissions = platformUser.permissions;
         }
-        if (token.accessTokenExpires && Date.now() < token.accessTokenExpires - 30_000) return token;
-
-        if (!token.refreshToken) return token;
-        const refreshedTokens = await refreshAccessToken(token.refreshToken);
-        if (!refreshedTokens) return token;
-
-        token.accessToken = refreshedTokens.accessToken;
-        token.refreshToken = refreshedTokens.refreshToken;
-        token.accessTokenExpires = expiresAt(refreshedTokens.expiresIn);
-        return token;
+        return await validateToken(token, true);
       } catch {
-        return token;
+        return invalidateToken(token);
       }
     },
     async session({ session, token }) {
       try {
+        session.error = token.error;
+        session.accessTokenExpires = token.accessTokenExpires;
         if (session.user) {
           session.user.id = token.userId;
           session.user.status = token.status;

@@ -14,6 +14,7 @@ import { FormMessage } from "@/features/auth/components/form-message";
 import { PasswordField } from "@/features/auth/components/password-field";
 import { loginSchema, type LoginInput } from "@/features/auth/schemas/login.schema";
 import { login } from "@/features/auth/services/auth-client.service";
+import { safeRedirectPath } from "@/lib/auth/redirect-path";
 
 const oauthErrors: Record<string, string> = {
   oauth: "Não foi possível concluir a autenticação com o provedor.",
@@ -46,7 +47,7 @@ export function LoginForm({
         setMessage(result.message);
         return;
       }
-      const destination = redirectTo?.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/";
+      const destination = safeRedirectPath(redirectTo);
       router.replace(destination);
       router.refresh();
     } catch {

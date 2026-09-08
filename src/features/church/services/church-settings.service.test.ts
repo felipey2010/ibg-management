@@ -13,39 +13,51 @@ describe("church settings data access", () => {
     vi.mocked(getApiSession).mockResolvedValue({
       expires: "2099-01-01",
       accessToken: "test-token",
-      user: { id: "user", status: "ACTIVE", permissions: [] },
+      user: { id: "user", status: "ACTIVE", permissions: ["church.settings.update"] },
     });
   });
+
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     vi.clearAllMocks();
   });
 
-  it("does not contact the API before authentication", async () => {
+  it("reads public settings without checking authentication", async () => {
     vi.mocked(getApiSession).mockResolvedValue(null);
-    expect(await getChurchSettings()).toMatchObject({ ok: false, status: 401 });
+    vi.mocked(fetch).mockResolvedValue(Response.json({ success: true, data: null }));
+    expect(await getChurchSettings()).toMatchObject({ ok: true });
+    expect(getApiSession).not.toHaveBeenCalled();
+  });
+
+  it("rejects anonymous writes before contacting the API", async () => {
+    vi.mocked(getApiSession).mockResolvedValue(null);
+    expect(await saveChurchSettings(defaultChurchSettings)).toMatchObject({ ok: false, status: 401 });
     expect(fetch).not.toHaveBeenCalled();
   });
+
   it("loads defaults only when a successful response has null settings", async () => {
-    vi.mocked(fetch).mockResolvedValue(Response.json({ success: true, data: null, canEdit: true }));
-    expect(await getChurchSettings()).toEqual({ ok: true, settings: defaultChurchSettings, canEdit: true });
+    vi.mocked(fetch).mockResolvedValue(Response.json({ success: true, data: null }));
+    expect(await getChurchSettings()).toEqual({ ok: true, settings: defaultChurchSettings });
     expect(fetch).toHaveBeenCalledWith(
       "http://localhost:4000/api/v1/church/settings",
       expect.objectContaining({
         cache: "no-store",
-        headers: expect.objectContaining({ Authorization: "Bearer test-token" }),
+        headers: { "Content-Type": "application/json" },
       }),
     );
   });
+
   it.each([401, 403, 404, 500])("does not replace HTTP %s failures with defaults", async (status) => {
     vi.mocked(fetch).mockResolvedValue(new Response(null, { status }));
     expect(await getChurchSettings()).toMatchObject({ ok: false, status });
   });
+
   it("rejects malformed successful responses", async () => {
     vi.mocked(fetch).mockResolvedValue(Response.json({ success: true, data: [] }));
     expect(await getChurchSettings()).toMatchObject({ ok: false });
   });
+
   it("authenticates writes and respects backend denial", async () => {
     vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 403 }));
     expect(await saveChurchSettings(defaultChurchSettings)).toMatchObject({ ok: false, status: 403 });

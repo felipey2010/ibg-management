@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 
 interface SidebarUser {
+  permissions: string[];
   name?: string | null;
   email?: string | null;
   image?: string | null;
@@ -23,7 +24,7 @@ export function AppSidebar({ user }: Readonly<{ user: SidebarUser }>) {
         <ChurchBrand />
       </SidebarHeader>
       <SidebarContent className="py-4">
-        <SidebarNavigation />
+        <SidebarNavigation permissions={user.permissions} />
       </SidebarContent>
       <SidebarSeparator className="mx-0" />
       <SidebarFooter>

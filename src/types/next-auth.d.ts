@@ -3,6 +3,8 @@ import type { AccountStatus } from "@/lib/auth/auth.types";
 
 declare module "next-auth" {
   interface Session {
+    error?: "SessionExpired";
+    accessTokenExpires?: number;
     user: DefaultSession["user"] & {
       id: string;
       status: AccountStatus;
@@ -23,6 +25,8 @@ declare module "next-auth/jwt" {
     accessToken?: string;
     refreshToken?: string;
     accessTokenExpires?: number;
+    refreshTokenExpires?: number;
+    error?: "SessionExpired";
     userId: string;
     status: AccountStatus;
     permissions: string[];

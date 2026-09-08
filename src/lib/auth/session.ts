@@ -1,12 +1,13 @@
 import "server-only";
-
-import { getServerSession } from "next-auth";
-
-import { authOptions } from "@/lib/auth/auth-options";
+import { getApiSession } from "./api-session";
 
 export async function getSession() {
   try {
-    return await getServerSession(authOptions);
+    const session = await getApiSession();
+    if (!session) return null;
+
+    const { user, expires, accessTokenExpires } = session;
+    return { user, expires, accessTokenExpires };
   } catch {
     return null;
   }

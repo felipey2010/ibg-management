@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { toast } from "@/components/ui/toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,8 @@ import { churchSettingsSections } from "../church-settings.fields";
 import { useChurchSettings } from "./church-settings-provider";
 import { ChurchSettingsSection } from "./church-settings-section";
 
-export function ChurchSettingsForm() {
-  const { settings, canEdit, setSettings } = useChurchSettings();
-  const [feedback, setFeedback] = useState<{ error: boolean; message: string } | null>(null);
+export function ChurchSettingsForm({ canEdit }: Readonly<{ canEdit: boolean }>) {
+  const { settings, setSettings } = useChurchSettings();
   const {
     register,
     handleSubmit,
@@ -25,18 +24,25 @@ export function ChurchSettingsForm() {
 
   const onSubmit = handleSubmit(async (values) => {
     if (!canEdit || isSubmitting) return;
-    setFeedback(null);
     try {
       const result = await updateChurchSettings(values);
       if (!result.ok) {
-        setFeedback({ error: true, message: result.message });
+        if (result.status === 401) {
+          window.location.replace("/login?error=session");
+          return;
+        }
+        if (result.status === 403) {
+          window.location.replace("/");
+          return;
+        }
+        toast.error(result.message);
         return;
       }
       setSettings(result.settings);
       reset(result.settings);
-      setFeedback({ error: false, message: "Configurações salvas com sucesso." });
+      toast.success("Configurações salvas com sucesso.");
     } catch {
-      setFeedback({ error: true, message: "Não foi possível salvar as configurações. Tente novamente." });
+      toast.error("Não foi possível salvar as configurações. Tente novamente.");
     }
   });
 
@@ -59,14 +65,6 @@ export function ChurchSettingsForm() {
           <ChurchSettingsSection key={section.title} section={section} register={register} errors={errors} />
         ))}
       </fieldset>
-      {feedback ? (
-        <p
-          role={feedback.error ? "alert" : "status"}
-          className={feedback.error ? "text-destructive text-sm" : "text-sm"}
-        >
-          {feedback.message}
-        </p>
-      ) : null}
       {canEdit ? (
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button type="submit" disabled={isSubmitting || (!isDirty && !!settings.id)}>
@@ -78,7 +76,6 @@ export function ChurchSettingsForm() {
             disabled={isSubmitting || !isDirty}
             onClick={() => {
               reset(settings);
-              setFeedback(null);
             }}
           >
             Descartar alterações

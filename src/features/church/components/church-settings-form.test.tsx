@@ -5,8 +5,10 @@ import { ChurchSettingsProvider, useChurchSettings } from "./church-settings-pro
 import { ChurchSettingsForm } from "./church-settings-form";
 import { defaultChurchSettings } from "../church-settings.defaults";
 import { reloadChurchSettings, updateChurchSettings } from "../actions";
+import { toast } from "@/components/ui/toast";
 
 vi.mock("../actions", () => ({ reloadChurchSettings: vi.fn(), updateChurchSettings: vi.fn() }));
+vi.mock("@/components/ui/toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 function Consumer() {
   return <output aria-label="Nome compartilhado">{useChurchSettings().settings.name}</output>;
@@ -14,9 +16,9 @@ function Consumer() {
 
 function setup(canEdit = true) {
   render(
-    <ChurchSettingsProvider initialResult={{ ok: true, settings: defaultChurchSettings, canEdit }}>
+    <ChurchSettingsProvider initialResult={{ ok: true, settings: defaultChurchSettings }}>
       <Consumer />
-      <ChurchSettingsForm />
+      <ChurchSettingsForm canEdit={canEdit} />
     </ChurchSettingsProvider>,
   );
   return userEvent.setup();
@@ -35,10 +37,9 @@ describe("church settings", () => {
     vi.mocked(updateChurchSettings).mockResolvedValue({
       ok: true,
       settings: { ...defaultChurchSettings, id: "church", name: "Comunidade Esperança" },
-      canEdit: true,
     });
     await user.click(screen.getByRole("button", { name: "Salvar configurações" }));
-    expect(await screen.findByText("Configurações salvas com sucesso.")).toBeInTheDocument();
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Configurações salvas com sucesso."));
     expect(screen.getByLabelText("Nome compartilhado")).toHaveTextContent("Comunidade Esperança");
     expect(screen.queryByText(/valores padrão estão em uso/)).not.toBeInTheDocument();
   });
@@ -60,7 +61,7 @@ describe("church settings", () => {
       message: "Tente novamente.",
     });
     await user.click(screen.getByRole("button", { name: "Salvar configurações" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Tente novamente.");
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Tente novamente."));
     expect(screen.getByLabelText("E-mail")).toHaveValue("contato@example.com");
   });
 
@@ -81,7 +82,6 @@ describe("church settings", () => {
     vi.mocked(reloadChurchSettings).mockResolvedValue({
       ok: true,
       settings: defaultChurchSettings,
-      canEdit: false,
     });
     await user.click(screen.getByRole("button", { name: "Tentar novamente" }));
     await waitFor(() =>

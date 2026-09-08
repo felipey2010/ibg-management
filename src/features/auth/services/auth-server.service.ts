@@ -14,9 +14,7 @@ function errorEnvelope<T>(message: string): ApiEnvelope<T> {
 function isApiEnvelope<T>(value: unknown): value is ApiEnvelope<T> {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate.success === "boolean" && typeof candidate.message === "string"
-  );
+  return typeof candidate.success === "boolean" && typeof candidate.message === "string";
 }
 
 export async function requestAuthApi<T>(
@@ -36,7 +34,12 @@ export async function requestAuthApi<T>(
     if (init.body) headers.set("Content-Type", "application/json");
     if (token) headers.set("Authorization", `Bearer ${token}`);
 
-    const upstream = await fetch(`${apiUrl}${path}`, { ...init, headers, cache: "no-store" });
+    const upstream = await fetch(`${apiUrl}${path}`, {
+      ...init,
+      headers,
+      cache: "no-store",
+      signal: init.signal ?? AbortSignal.timeout(15_000),
+    });
     const body: unknown = await upstream.json().catch(() => null);
 
     if (!isApiEnvelope<T>(body)) {

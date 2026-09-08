@@ -6,4 +6,4 @@ export type ChurchSettings = ChurchSettingsValues & {
 };
 
 export type ChurchSettingsResult =
-  { ok: true; settings: ChurchSettings; canEdit: boolean } | { ok: false; message: string; status: number };
+  { ok: true; settings: ChurchSettings } | { ok: false; message: string; status: number };
