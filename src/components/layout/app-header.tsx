@@ -5,7 +5,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function AppHeader() {
   return (
-    <header className="border-border bg-background/95 sticky top-0 z-20 flex h-16 items-center gap-3 border-b px-4 backdrop-blur sm:px-6 lg:px-8">
+    <header className="border-border bg-sidebar sticky top-0 z-20 flex h-16 items-center gap-3 border-b px-4 backdrop-blur sm:px-6 lg:px-8">
       <SidebarTrigger aria-label="Alternar menu principal" />
       <span className="text-sm font-semibold">Painel</span>
       <div className="ml-auto flex items-center gap-2">

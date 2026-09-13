@@ -72,10 +72,10 @@
   --input: #d6d2ca;
   --ring: #bc3131;
   --radius: 0.5rem;
-  --sidebar: #ebe9e4;
+  --sidebar: #fbfbfb;
   --sidebar-foreground: #303137;
-  --sidebar-accent: #ded6c8;
-  --sidebar-accent-foreground: #805a22;
+  --sidebar-accent: #ffbebe;
+  --sidebar-accent-foreground: #580000;
   --sidebar-border: #d8d4cc;
 }
 

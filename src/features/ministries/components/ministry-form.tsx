@@ -3,8 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { FormField, FormSection } from "@/components/shared/form-layout";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAdminMutation } from "@/hooks/use-admin-mutation";
 import { saveMinistry } from "../actions";
@@ -34,28 +34,14 @@ export function MinistryForm({ ministry }: Readonly<{ ministry?: Ministry }>) {
   );
   return (
     <form onSubmit={submit} className="space-y-6" noValidate>
-      <fieldset className="space-y-5 rounded-xl border p-5 sm:p-6">
-        <legend className="sr-only">Dados do ministério</legend>
-        <div className="space-y-2">
-          <Label htmlFor="name">Nome *</Label>
+      <FormSection title="Dados do ministério" className="grid-cols-1 sm:grid-cols-1">
+        <FormField label="Nome *" htmlFor="name" error={errors.name?.message}>
           <Input id="name" {...register("name")} />
-          {errors.name ? (
-            <p role="alert" className="text-destructive text-xs">
-              {errors.name.message}
-            </p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">Descrição</Label>
+        </FormField>
+        <FormField label="Descrição" htmlFor="description" error={errors.description?.message}>
           <Textarea id="description" rows={6} {...register("description")} />
-          {errors.description ? (
-            <p role="alert" className="text-destructive text-xs">
-              {errors.description.message}
-            </p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
+        </FormField>
+        <FormField label="Status" htmlFor="status">
           <select
             id="status"
             {...register("status")}
@@ -64,8 +50,8 @@ export function MinistryForm({ ministry }: Readonly<{ ministry?: Ministry }>) {
             <option value="ACTIVE">Ativo</option>
             <option value="INACTIVE">Inativo</option>
           </select>
-        </div>
-      </fieldset>
+        </FormField>
+      </FormSection>
       <div className="flex flex-col-reverse gap-3 border-t pt-6 sm:flex-row sm:justify-end">
         <Button type="button" variant="outline" disabled={pending} onClick={() => router.back()}>
           Cancelar
