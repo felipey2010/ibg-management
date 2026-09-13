@@ -51,7 +51,13 @@ export const navigationGroups = [
   {
     label: "Gestão",
     items: [
-      { label: "Estoque", href: "/estoque", icon: Boxes, available: false },
+      {
+        label: "Estoque",
+        href: "/estoque",
+        permission: "inventory.read",
+        icon: Boxes,
+        available: true,
+      },
       {
         label: "Contribuições",
         href: "/contribuicoes",
