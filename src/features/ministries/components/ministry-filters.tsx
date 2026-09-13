@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
+import { ClearFiltersLink } from "@/components/shared/clear-filters-link";
 import { Input } from "@/components/ui/input";
 import type { MinistryQuery } from "../ministry.schema";
 export function MinistryFilters({ query }: Readonly<{ query: MinistryQuery }>) {
   return (
     <form
-      className="bg-card grid gap-3 rounded-xl border p-4 sm:grid-cols-[1fr_180px_auto]"
+      key={`${query.search}-${query.status}`}
+      className="bg-card grid gap-3 rounded-xl border p-4 sm:grid-cols-[1fr_180px_auto_auto]"
       action="/ministerios"
     >
       <Input
@@ -24,6 +26,7 @@ export function MinistryFilters({ query }: Readonly<{ query: MinistryQuery }>) {
         <option value="INACTIVE">Inativos</option>
       </select>
       <Button type="submit">Filtrar</Button>
+      <ClearFiltersLink href="/ministerios" visible={!!(query.search || query.status)} />
     </form>
   );
 }

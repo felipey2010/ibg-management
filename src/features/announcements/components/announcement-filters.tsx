@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
+import { ClearFiltersLink } from "@/components/shared/clear-filters-link";
 import { Input } from "@/components/ui/input";
 import type { AnnouncementQuery } from "../announcement.schema";
 export function AnnouncementFilters({ query }: Readonly<{ query: AnnouncementQuery }>) {
   return (
     <form
+      key={`${query.search}-${query.status}-${query.audience}`}
       action="/avisos"
-      className="bg-card grid gap-3 rounded-xl border p-4 md:grid-cols-[1fr_170px_210px_auto]"
+      className="bg-card grid gap-3 rounded-xl border p-4 md:grid-cols-[1fr_170px_210px_auto_auto]"
     >
       <Input
         name="search"
@@ -37,6 +39,7 @@ export function AnnouncementFilters({ query }: Readonly<{ query: AnnouncementQue
         <option value="ALL_USERS">Todos os usuários</option>
       </select>
       <Button type="submit">Filtrar</Button>
+      <ClearFiltersLink href="/avisos" visible={!!(query.search || query.status || query.audience)} />
     </form>
   );
 }

@@ -1,11 +1,13 @@
 import { Button } from "@/components/ui/button";
+import { ClearFiltersLink } from "@/components/shared/clear-filters-link";
 import { Input } from "@/components/ui/input";
 import type { EventQuery } from "../event.schema";
 export function EventFilters({ query }: Readonly<{ query: EventQuery }>) {
   return (
     <form
+      key={`${query.search}-${query.status}-${query.period}`}
       action="/eventos"
-      className="bg-card grid gap-3 rounded-xl border p-4 md:grid-cols-[1fr_170px_170px_auto]"
+      className="bg-card grid gap-3 rounded-xl border p-4 md:grid-cols-[1fr_170px_170px_auto_auto]"
     >
       <Input
         name="search"
@@ -34,6 +36,7 @@ export function EventFilters({ query }: Readonly<{ query: EventQuery }>) {
         <option value="past">Realizados</option>
       </select>
       <Button type="submit">Filtrar</Button>
+      <ClearFiltersLink href="/eventos" visible={!!(query.search || query.status || query.period)} />
     </form>
   );
 }

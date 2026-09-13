@@ -1,16 +1,22 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { ClearFiltersLink } from "@/components/shared/clear-filters-link";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { SubmitEvent, useTransition } from "react";
+import { SubmitEvent, useState, useTransition } from "react";
 import { userStatusLabels } from "../user.constants";
 import type { UserQuery } from "../user.schema";
 
 export function UserFilters({ query }: Readonly<{ query: UserQuery }>) {
+  return <UserFiltersForm key={`${query.search}-${query.status}`} query={query} />;
+}
+
+function UserFiltersForm({ query }: Readonly<{ query: UserQuery }>) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [status, setStatus] = useState(query.status);
   const items = [
     { value: "", label: "Todos os status" },
     ...Object.entries(userStatusLabels).map(([value, label]) => ({ value, label })),
@@ -29,7 +35,6 @@ export function UserFilters({ query }: Readonly<{ query: UserQuery }>) {
 
   return (
     <form
-      key={`${query.search}-${query.status}`}
       className="bg-card flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center"
       onSubmit={handleSubmit}
     >
@@ -44,7 +49,7 @@ export function UserFilters({ query }: Readonly<{ query: UserQuery }>) {
           className="h-10 pl-9"
         />
       </div>
-      <Select name="status" defaultValue={query.status} items={items}>
+      <Select name="status" value={status} onValueChange={(value) => setStatus(value ?? "")} items={items}>
         <SelectTrigger aria-label="Filtrar por status" className="w-full sm:w-52">
           <SelectValue />
         </SelectTrigger>
@@ -59,16 +64,7 @@ export function UserFilters({ query }: Readonly<{ query: UserQuery }>) {
       <Button type="submit" variant="outline" disabled={pending}>
         {pending ? "Buscando…" : "Filtrar"}
       </Button>
-      {query.search || query.status ? (
-        <Button
-          variant="ghost"
-          type="button"
-          disabled={pending}
-          onClick={() => startTransition(() => router.push("/configuracoes/usuarios"))}
-        >
-          Limpar
-        </Button>
-      ) : null}
+      <ClearFiltersLink href="/configuracoes/usuarios" visible={!!(query.search || query.status)} />
     </form>
   );
 }

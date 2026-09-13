@@ -1,16 +1,22 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import { ClearFiltersLink } from "@/components/shared/clear-filters-link";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import type { MemberQuery } from "../member.schema";
 import { memberStatusLabels } from "../member.types";
 
 export function MemberFilters({ query }: Readonly<{ query: MemberQuery }>) {
+  return <MemberFiltersForm key={`${query.search}-${query.status}`} query={query} />;
+}
+
+function MemberFiltersForm({ query }: Readonly<{ query: MemberQuery }>) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [status, setStatus] = useState(query.status || "all");
   const statuses = [
     { value: "all", label: "Todos os status" },
     ...Object.entries(memberStatusLabels).map(([value, label]) => ({ value, label })),
@@ -40,7 +46,12 @@ export function MemberFilters({ query }: Readonly<{ query: MemberQuery }>) {
           maxLength={100}
         />
       </div>
-      <Select name="status" defaultValue={query.status || "all"} items={statuses}>
+      <Select
+        name="status"
+        value={status}
+        onValueChange={(value) => setStatus(value ?? "all")}
+        items={statuses}
+      >
         <SelectTrigger aria-label="Filtrar por status" className="w-full sm:w-52">
           <SelectValue />
         </SelectTrigger>
@@ -55,11 +66,7 @@ export function MemberFilters({ query }: Readonly<{ query: MemberQuery }>) {
       <Button type="submit" variant="outline" disabled={pending}>
         Filtrar
       </Button>
-      {query.search || query.status ? (
-        <Button type="button" variant="ghost" onClick={() => startTransition(() => router.push("/membros"))}>
-          Limpar
-        </Button>
-      ) : null}
+      <ClearFiltersLink href="/membros" visible={!!(query.search || query.status)} />
     </form>
   );
 }
