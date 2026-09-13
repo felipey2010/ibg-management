@@ -18,7 +18,13 @@ export const navigationGroups = [
     label: "Principal",
     items: [
       { label: "Painel", href: "/", icon: LayoutDashboard, available: true },
-      { label: "Membros", href: "/membros", icon: UsersRound, available: false },
+      {
+        label: "Membros",
+        href: "/membros",
+        permission: "members.read",
+        icon: UsersRound,
+        available: true,
+      },
       { label: "Ministérios", href: "/ministerios", icon: UserRound, available: false },
       { label: "Avisos", href: "/avisos", icon: Megaphone, available: false },
       { label: "Eventos", href: "/eventos", icon: CalendarDays, available: false },

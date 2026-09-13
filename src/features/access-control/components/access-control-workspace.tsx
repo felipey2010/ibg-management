@@ -62,7 +62,6 @@ export function AccessControlWorkspace({
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={role.is_system_role}
                         onClick={() => setEdit({ kind: "role", record: role })}
                       >
                         <Pencil className="size-4" /> Editar
@@ -87,12 +86,7 @@ export function AccessControlWorkspace({
                         <UsersRound className="mr-1 inline size-3.5" /> {role._count.user_roles} usuários
                       </span>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={role.is_system_role}
-                      onClick={() => setPermissionRole(role)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => setPermissionRole(role)}>
                       Gerenciar permissões
                     </Button>
                   </div>

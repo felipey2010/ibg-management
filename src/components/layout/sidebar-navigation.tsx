@@ -24,7 +24,7 @@ export function SidebarNavigation({ permissions }: Readonly<{ permissions: strin
         <SidebarGroup key={group.label}>
           <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {group.items.map((item) => {
                 if (
                   "permission" in item &&

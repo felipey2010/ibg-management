@@ -38,4 +38,11 @@ describe("settings navigation permissions", () => {
     expect(screen.getByText("Usuários")).toBeInTheDocument();
     expect(screen.getByText("Perfis e permissões")).toBeInTheDocument();
   });
+
+  it("shows member management only with read permission", () => {
+    const { rerender } = render(<SidebarNavigation permissions={[]} />);
+    expect(screen.queryByText("Membros")).not.toBeInTheDocument();
+    rerender(<SidebarNavigation permissions={["members.read"]} />);
+    expect(screen.getByText("Membros")).toBeInTheDocument();
+  });
 });

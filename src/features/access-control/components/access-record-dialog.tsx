@@ -26,6 +26,7 @@ export function AccessRecordDialog(props: Readonly<Props>) {
   const { pending, execute } = useAdminMutation();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const record = props.record;
+  const isSystemRole = props.kind === "role" && props.record?.is_system_role;
 
   return (
     <Dialog open={props.open} onOpenChange={(open) => !pending && props.onOpenChange(open)}>
@@ -92,8 +93,15 @@ export function AccessRecordDialog(props: Readonly<Props>) {
                 maxLength={100}
                 className="font-mono"
                 aria-invalid={!!errors.code}
+                readOnly={isSystemRole}
+                aria-describedby={isSystemRole ? "system-role-code-help" : undefined}
               />
               {errors.code ? <p className="text-destructive text-xs">{errors.code}</p> : null}
+              {isSystemRole ? (
+                <p id="system-role-code-help" className="text-muted-foreground text-xs">
+                  O código de um perfil do sistema é protegido para preservar as regras de acesso.
+                </p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="access-description">Descrição</Label>

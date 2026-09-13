@@ -3,11 +3,17 @@ import { useState } from "react";
 import { LogOut, ShieldPlus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { useAdminMutation } from "@/hooks/use-admin-mutation";
-import { getInitials } from "@/lib/utils";
 import { updateUserAccess } from "../actions";
 import type { AdminUser } from "../user.types";
 import type { Role } from "@/features/access-control/access-control.types";
@@ -15,6 +21,7 @@ import type { AccountStatus } from "@/lib/auth/auth.types";
 import type { UserMutation } from "../user.schema";
 import { userStatusLabels } from "../user.constants";
 import { UserStatusBadge } from "./user-status-badge";
+import AvatarPhoto from "@/components/shared/avatar-photo";
 
 type Confirmation = {
   mutation: UserMutation;
@@ -50,20 +57,23 @@ export function UserAccessPanel({
         }}
       >
         <SheetContent
-          className="gap-0 overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-lg"
+          side="right"
+          className="gap-0 data-[side=right]:w-full data-[side=right]:sm:max-w-lg"
           showCloseButton={!pending}
         >
           <SheetHeader className="border-b p-6 pr-12">
-            <div className="bg-muted text-foreground mb-3 flex size-12 items-center justify-center rounded-xl text-base font-semibold">
-              {getInitials(user.fullName)}
-            </div>
-            <SheetTitle className="text-xl font-semibold">{user.fullName}</SheetTitle>
-            <SheetDescription className="break-all">{user.email}</SheetDescription>
-            <div className="mt-3">
-              <UserStatusBadge status={user.status} />
+            <div className="flex gap-2">
+              <AvatarPhoto name={user.fullName} className="size-24" />
+              <div className="flex flex-1 flex-col gap-1">
+                <SheetTitle className="text-xl font-semibold">{user.fullName}</SheetTitle>
+                <SheetDescription className="break-all">{user.email}</SheetDescription>
+                <div className="mt-3">
+                  <UserStatusBadge status={user.status} />
+                </div>
+              </div>
             </div>
           </SheetHeader>
-          <div className="space-y-8 p-6">
+          <div className="space-y-8 overflow-y-auto p-6">
             <section className="space-y-4">
               <div>
                 <h3 className="font-semibold">Situação da conta</h3>
@@ -190,28 +200,28 @@ export function UserAccessPanel({
                 </p>
               )}
             </section>
-            <section className="space-y-3 border-t pt-6">
-              <h3 className="font-semibold">Sessões e segurança</h3>
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                Encerre o acesso desta conta em todos os dispositivos. Os dados do usuário serão preservados.
-              </p>
-              <Button
-                variant="outline"
-                disabled={pending}
-                onClick={() =>
-                  setConfirmation({
-                    mutation: { action: "revoke", id: user.id },
-                    title: "Encerrar todas as sessões?",
-                    description: `Todas as sessões de ${user.fullName} serão encerradas. Não é possível restaurá-las; um novo login será necessário.${selfNotice}`,
-                    label: "Encerrar sessões",
-                    destructive: true,
-                  })
-                }
-              >
-                <LogOut className="size-4" /> Encerrar sessões
-              </Button>
-            </section>
           </div>
+          <SheetFooter>
+            <h3 className="font-semibold">Sessões e segurança</h3>
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Encerre o acesso desta conta em todos os dispositivos. Os dados do usuário serão preservados.
+            </p>
+            <Button
+              variant="destructive"
+              disabled={pending}
+              onClick={() =>
+                setConfirmation({
+                  mutation: { action: "revoke", id: user.id },
+                  title: "Encerrar todas as sessões?",
+                  description: `Todas as sessões de ${user.fullName} serão encerradas. Não é possível restaurá-las; um novo login será necessário.${selfNotice}`,
+                  label: "Encerrar sessões",
+                  destructive: true,
+                })
+              }
+            >
+              <LogOut className="size-4" /> Encerrar sessões
+            </Button>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
       <ConfirmationDialog

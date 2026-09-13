@@ -13,6 +13,7 @@ export function AppHeader() {
           <Search aria-hidden="true" className="size-4" />
           <span className="sr-only">Pesquisar</span>
           <input
+            id="app-header-search-input"
             type="search"
             placeholder="Buscar membros, eventos, documentos"
             className="text-foreground placeholder:text-tertiary min-w-0 flex-1 bg-transparent text-xs outline-none"

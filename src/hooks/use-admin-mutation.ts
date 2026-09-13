@@ -10,7 +10,11 @@ export function useAdminMutation() {
   const busy = useRef(false);
   const router = useRouter();
 
-  async function execute(operation: () => Promise<AdminResult>, message: string, onSuccess?: () => void) {
+  async function execute(
+    operation: () => Promise<AdminResult<unknown>>,
+    message: string,
+    onSuccess?: () => void,
+  ) {
     if (busy.current) return false;
     busy.current = true;
     setPending(true);
