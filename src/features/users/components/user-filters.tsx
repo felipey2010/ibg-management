@@ -30,7 +30,7 @@ export function UserFilters({ query }: Readonly<{ query: UserQuery }>) {
   return (
     <form
       key={`${query.search}-${query.status}`}
-      className="flex flex-col gap-3 sm:flex-row sm:items-center"
+      className="bg-card flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center"
       onSubmit={handleSubmit}
     >
       <div className="relative min-w-0 flex-1">

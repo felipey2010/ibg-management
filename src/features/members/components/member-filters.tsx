@@ -17,7 +17,7 @@ export function MemberFilters({ query }: Readonly<{ query: MemberQuery }>) {
   ];
   return (
     <form
-      className="flex flex-col gap-3 sm:flex-row"
+      className="bg-card flex flex-col gap-3 rounded-xl border p-4 sm:flex-row"
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
