@@ -39,7 +39,13 @@ export const navigationGroups = [
         icon: Megaphone,
         available: true,
       },
-      { label: "Eventos", href: "/eventos", icon: CalendarDays, available: false },
+      {
+        label: "Eventos",
+        href: "/eventos",
+        permission: "events.read",
+        icon: CalendarDays,
+        available: true,
+      },
     ],
   },
   {
