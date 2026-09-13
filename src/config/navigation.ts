@@ -61,8 +61,9 @@ export const navigationGroups = [
       {
         label: "Contribuições",
         href: "/contribuicoes",
+        permission: "contributions.read",
         icon: CircleDollarSign,
-        available: false,
+        available: true,
       },
       {
         label: "Estudos Bíblicos",
